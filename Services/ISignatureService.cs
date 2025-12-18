@@ -1,6 +1,4 @@
-﻿using EImzoMVC.Models;
-
-namespace EImzoMVC.Services;
+﻿namespace EImzoMVC;
 
 public interface ISignatureService
 {

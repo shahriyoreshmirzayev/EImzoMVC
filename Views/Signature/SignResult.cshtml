@@ -1,4 +1,4 @@
-﻿@using EImzoMVC.Models
+﻿@using EImzoMVC;
 @{
     ViewData["Title"] = "Imzolash Natijasi";
     var signerInfo = ViewBag.SignerInfo as SignerInfo;
@@ -6,8 +6,7 @@
 
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-8 mx-auto">
-            <!-- Muvaffaqiyat xabari -->
+        <div class="col-md-8 mx-auto"> 
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <h4 class="alert-heading">
                     <i class="bi bi-check-circle-fill"></i> Muvaffaqiyatli!
@@ -15,8 +14,7 @@
                 <p class="mb-0">@ViewBag.Message</p>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-
-            <!-- Imzo ma'lumotlari -->
+             
             @if (signerInfo != null)
             {
                 <div class="card shadow mb-4">
@@ -38,8 +36,7 @@
                     </div>
                 </div>
             }
-
-            <!-- Amallar -->
+             
             <div class="card shadow">
                 <div class="card-body text-center p-4">
                     <h5 class="mb-4">Keyingi Amallar</h5>

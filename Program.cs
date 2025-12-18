@@ -1,7 +1,7 @@
-using EImzoMVC.Services;
+using EImzoMVC;
 
 var builder = WebApplication.CreateBuilder(args);
- 
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession(options =>
 {
@@ -9,7 +9,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
- 
+
 builder.Services.AddScoped<ISignatureService, SignatureService>();
 
 builder.Services
@@ -18,7 +18,7 @@ builder.Services
 
 
 var app = builder.Build();
- 
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

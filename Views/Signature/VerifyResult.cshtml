@@ -1,4 +1,4 @@
-﻿@model EImzoMVC.Models.VerificationResult
+﻿@model EImzoMVC.VerificationResult
 @{
     ViewData["Title"] = "Tekshirish Natijasi";
 }
@@ -7,16 +7,14 @@
     <div class="row">
         <div class="col-md-8 mx-auto">
             @if (Model.IsValid)
-            {
-                <!-- Muvaffaqiyat -->
+            { 
                 <div class="alert alert-success border-success" role="alert">
                     <h4 class="alert-heading">
                         <i class="bi bi-check-circle-fill"></i> Imzo To'g'ri va Haqiqiy!
                     </h4>
                     <p class="mb-0">@Model.Message</p>
                 </div>
-
-                <!-- Imzolovchi ma'lumotlari -->
+                 
                 <div class="card shadow mb-4">
                     <div class="card-header bg-success text-white">
                         <h4><i class="bi bi-person-check"></i> Imzolovchi Ma'lumotlari</h4>
@@ -61,8 +59,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Amallar -->
+                 
                 <div class="card shadow">
                     <div class="card-body text-center p-4">
                         <div class="d-grid gap-2">
@@ -80,8 +77,7 @@
                 </div>
             }
             else
-            {
-                <!-- Xatolik -->
+            { 
                 <div class="alert alert-danger border-danger" role="alert">
                     <h4 class="alert-heading">
                         <i class="bi bi-x-circle-fill"></i> Imzo Noto'g'ri!

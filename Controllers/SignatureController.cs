@@ -6,11 +6,15 @@ public class SignatureController : Controller
 {
     private readonly ISignatureService _signatureService;
     private readonly ILogger<SignatureController> _logger;
+    private readonly Services.EImzoService? _eImzoService;
+    private readonly Models.EImzoConfig _eImzoConfig;
 
-    public SignatureController(ISignatureService signatureService, ILogger<SignatureController> logger)
+    public SignatureController(ISignatureService signatureService, ILogger<SignatureController> logger, Services.EImzoService? eImzoService = null, Models.EImzoConfig? eImzoConfig = null)
     {
         _signatureService = signatureService;
         _logger = logger;
+        _eImzoService = eImzoService;
+        _eImzoConfig = eImzoConfig ?? new Models.EImzoConfig();
     }
 
     public IActionResult Index()
@@ -21,6 +25,45 @@ public class SignatureController : Controller
     public IActionResult Sign()
     {
         return View(new SignDocumentViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoteCreateChallenge(SignDocumentViewModel model)
+    {
+        if (model?.DocumentFile == null)
+        {
+            ModelState.AddModelError("", "Hujjat faylini tanlang");
+            return View("Sign", model);
+        }
+
+        try
+        {
+            byte[] documentData;
+            using (var ms = new MemoryStream())
+            {
+                await model.DocumentFile.CopyToAsync(ms);
+                documentData = ms.ToArray();
+            }
+
+            // Store original document in session until callback
+            HttpContext.Session.Set("RemoteOriginalData", documentData);
+            HttpContext.Session.SetString("RemoteOriginalFileName", model.DocumentFile.FileName);
+
+            // Compute SHA256 digest as challenge
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            var hash = sha.ComputeHash(documentData);
+            var challenge = Convert.ToBase64String(hash);
+
+            ViewBag.Challenge = challenge;
+            return View("RemoteSign");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Remote challenge creation failed");
+            ModelState.AddModelError("", "Challenge yaratishda xatolik");
+            return View("Sign", model);
+        }
     }
 
     [HttpPost]
@@ -172,5 +215,74 @@ public class SignatureController : Controller
             Certificates = certificates
         };
         return View(model);
+    }
+
+    [HttpPost]
+    [IgnoreAntiforgeryToken]
+    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+    public async Task<IActionResult> RemoteSignCallback([FromBody] Models.RemoteSignCallbackDto dto)
+    {
+        // If external app posted raw PKCS#7 signed data (base64 or hex), verify and store it locally.
+        try
+        {
+            byte[] signedBytes = null;
+
+            if (!string.IsNullOrWhiteSpace(dto?.SignData))
+            {
+                var s = dto.SignData.Trim();
+                // Try base64
+                try
+                {
+                    signedBytes = Convert.FromBase64String(s);
+                }
+                catch
+                {
+                    // Try hex
+                    try
+                    {
+                        if (s.Length % 2 == 0)
+                        {
+                            signedBytes = Enumerable.Range(0, s.Length / 2)
+                                .Select(i => Convert.ToByte(s.Substring(i * 2, 2), 16))
+                                .ToArray();
+                        }
+                    }
+                    catch
+                    {
+                        signedBytes = null;
+                    }
+                }
+            }
+
+            if (signedBytes != null && signedBytes.Length > 0)
+            {
+                // Verify the provided PKCS#7
+                var verifyResult = await _signatureService.VerifySignatureAsync(signedBytes);
+                if (verifyResult != null && verifyResult.IsValid)
+                {
+                    // Save signed data and original filename placeholder
+                    HttpContext.Session.Set("SignedData", signedBytes);
+                    HttpContext.Session.SetString("OriginalFileName", verifyResult.SignerInfo?.SubjectName ?? "signed_document");
+
+                    return Json(new { success = true, message = "Signed data received and verified", signer = verifyResult.SignerInfo });
+                }
+
+                return Json(new { success = false, message = "Signed data is invalid or verification failed" });
+            }
+
+            // Fallback: if remote EImzo service is configured, call its Auth endpoint with signData
+            if (_eImzoService != null)
+            {
+                var auth = await _eImzoService.AuthAsync(dto.SignData);
+                return Json(new { success = auth != null && auth.Status == 1, message = auth?.Message });
+            }
+
+            return BadRequest(new { success = false, message = "No valid signed data provided and remote service not configured" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "RemoteSignCallback failed");
+            return StatusCode(500, new { success = false, message = "Internal error" });
+        }
     }
 }

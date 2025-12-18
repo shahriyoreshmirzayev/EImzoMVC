@@ -1,0 +1,19 @@
+@model EImzoMVC.Models.EImzoAuthResultDto
+@{
+    ViewData["Title"] = "Remote Sign Result";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">Remote Sign Result</div>
+                <div class="card-body">
+                    <p>Status: @Model.Status</p>
+                    <p>Message: @Model.Message</p>
+                    <a asp-action="Index" class="btn btn-secondary">Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 
@@ -19,8 +20,67 @@ public class SignatureService : ISignatureService
         {
             _logger.LogInformation("Hujjatni imzolash boshlandi...");
              
-            var certificate = new X509Certificate2(certificateData, password,
-                X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+            // Try to load a certificate from the provided PKCS#12 (PFX/P12) data.
+            // Some PKCS#12 blobs contain multiple certs; prefer one that has a private key.
+            X509Certificate2 certificate = null;
+            var attempts = new[] {
+                X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.UserKeySet,
+                X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet,
+                X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet
+            };
+
+            Exception lastEx = null;
+            foreach (var flags in attempts)
+            {
+                try
+                {
+                    var primary = new X509Certificate2(certificateData, password, flags);
+                    if (primary.HasPrivateKey)
+                    {
+                        certificate = primary;
+                        break;
+                    }
+
+                    var collection = new X509Certificate2Collection();
+                    collection.Import(certificateData, password, flags);
+                    certificate = collection.OfType<X509Certificate2>().FirstOrDefault(c => c.HasPrivateKey) ?? primary;
+                    if (certificate.HasPrivateKey) break;
+                }
+                catch (Exception ex)
+                {
+                    // remember last exception and try next flags
+                    lastEx = ex;
+                    _logger.LogDebug(ex, "PKCS#12 import attempt failed with flags {Flags}", flags);
+                }
+            }
+
+            if (certificate == null)
+            {
+                // If we failed to import, prefer to show a helpful message when password is incorrect
+                if (lastEx is CryptographicException && lastEx.Message.Contains("The specified network password is not correct", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new SignatureResult
+                    {
+                        Success = false,
+                        Message = "Parol noto'g'ri yoki sertifikat formati xato - parol tekshiring"
+                    };
+                }
+
+                return new SignatureResult
+                {
+                    Success = false,
+                    Message = "Sertifikatni ochishda xatolik. Sertifikat PFX/P12 ekanligini va parol to'g'ri ekanligini tekshiring."
+                };
+            }
+
+            if (!certificate.HasPrivateKey)
+            {
+                return new SignatureResult
+                {
+                    Success = false,
+                    Message = "Sertifikatda private key mavjud emas. PFX fayl private key bilan export qiling."
+                };
+            }
              
             if (certificate.NotAfter < DateTime.Now)
             {
@@ -71,10 +131,20 @@ public class SignatureService : ISignatureService
         catch (CryptographicException ex)
         {
             _logger.LogError(ex, "Kriptografik xatolik");
+            var msg = ex.Message;
+            if (msg != null && msg.Contains("The specified network password is not correct", StringComparison.OrdinalIgnoreCase))
+            {
+                return new SignatureResult
+                {
+                    Success = false,
+                    Message = "Parol noto'g'ri yoki sertifikat paroli mos kelmayapti. Iltimos parolni tekshiring."
+                };
+            }
+
             return new SignatureResult
             {
                 Success = false,
-                Message = $"Xatolik: Parol noto'g'ri yoki sertifikat formati xato - {ex.Message}"
+                Message = $"Xatolik: {ex.Message}"
             };
         }
         catch (Exception ex)
@@ -107,7 +177,7 @@ public class SignatureService : ISignatureService
             DateTime? signingTime = null;
             foreach (var attr in signerInfo.SignedAttributes)
             {
-                if (attr.Oid.Value == "1.2.840.113549.1.9.5")  
+                if (attr.Oid.Value == "1.2.840.113549.1.9.5")       
                 {
                     var pkcs9 = new Pkcs9SigningTime(attr.Values[0].RawData);
                     signingTime = pkcs9.SigningTime;
@@ -186,7 +256,29 @@ public class SignatureService : ISignatureService
     {
         try
         {
-            var certificate = new X509Certificate2(certificateData, password);
+            var keyStorageFlags = X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet;
+
+            X509Certificate2 certificate = null;
+            try
+            {
+                var primary = new X509Certificate2(certificateData, password, keyStorageFlags);
+                if (primary.HasPrivateKey)
+                {
+                    certificate = primary;
+                }
+                else
+                {
+                    var collection = new X509Certificate2Collection();
+                    collection.Import(certificateData, password, keyStorageFlags);
+                    certificate = collection.OfType<X509Certificate2>().FirstOrDefault(c => c.HasPrivateKey) ?? primary;
+                }
+            }
+            catch
+            {
+                // Fallback: try without flags
+                certificate = new X509Certificate2(certificateData, password);
+            }
+
             return ExtractSignerInfo(certificate);
         }
         catch (Exception ex)

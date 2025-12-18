@@ -1,4 +1,6 @@
 using EImzoMVC;
+using EImzoMVC.Models;
+using EImzoMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,19 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddScoped<ISignatureService, SignatureService>();
+
+// Configure EImzo remote settings
+builder.Services.Configure<EImzoConfig>(builder.Configuration.GetSection("EImzoConfig"));
+var eImzoConfig = builder.Configuration.GetSection("EImzoConfig").Get<EImzoConfig>() ?? new EImzoConfig();
+builder.Services.AddSingleton(eImzoConfig);
+
+// HttpClient for EImzo remote API
+builder.Services.AddHttpClient("EImzoClient", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddSingleton<EImzoService>();
 
 builder.Services
     .AddControllersWithViews()

@@ -1,5 +1,4 @@
-﻿using EImzoMVC.Services;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace EImzoMVC;
 
@@ -13,17 +12,17 @@ public class SignatureController : Controller
         _signatureService = signatureService;
         _logger = logger;
     }
-     
+
     public IActionResult Index()
     {
         return View();
     }
-     
+
     public IActionResult Sign()
     {
         return View(new SignDocumentViewModel());
     }
-     
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Sign(SignDocumentViewModel model)
@@ -34,25 +33,25 @@ public class SignatureController : Controller
         }
 
         try
-        { 
+        {
             byte[] documentData;
             using (var ms = new MemoryStream())
             {
                 await model.DocumentFile.CopyToAsync(ms);
                 documentData = ms.ToArray();
             }
-             
+
             byte[] certificateData;
             using (var ms = new MemoryStream())
             {
                 await model.CertificateFile.CopyToAsync(ms);
                 certificateData = ms.ToArray();
             }
-             
+
             var result = await _signatureService.SignDocumentAsync(documentData, certificateData, model.Password);
 
             if (result.Success)
-            { 
+            {
                 HttpContext.Session.Set("SignedData", result.SignedData);
                 HttpContext.Session.SetString("OriginalFileName", model.DocumentFile.FileName);
 
@@ -74,7 +73,7 @@ public class SignatureController : Controller
             return View(model);
         }
     }
-     
+
     public IActionResult SignResult()
     {
         if (TempData["SuccessMessage"] == null)
@@ -91,7 +90,7 @@ public class SignatureController : Controller
 
         return View();
     }
-     
+
     public IActionResult DownloadSigned()
     {
         var signedData = HttpContext.Session.Get("SignedData");
@@ -105,12 +104,12 @@ public class SignatureController : Controller
         var fileName = $"{Path.GetFileNameWithoutExtension(originalFileName)}.p7s";
         return File(signedData, "application/pkcs7-signature", fileName);
     }
-     
+
     public IActionResult Verify()
     {
         return View(new VerifySignatureViewModel());
     }
-     
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Verify(VerifySignatureViewModel model)
@@ -121,18 +120,18 @@ public class SignatureController : Controller
         }
 
         try
-        { 
+        {
             byte[] signedData;
             using (var ms = new MemoryStream())
             {
                 await model.SignedFile.CopyToAsync(ms);
                 signedData = ms.ToArray();
             }
-             
+
             var result = await _signatureService.VerifySignatureAsync(signedData);
 
             if (result.IsValid)
-            { 
+            {
                 if (result.OriginalData != null)
                 {
                     HttpContext.Session.Set("OriginalData", result.OriginalData);
@@ -150,7 +149,7 @@ public class SignatureController : Controller
             return View(model);
         }
     }
-     
+
     public IActionResult DownloadOriginal()
     {
         var originalData = HttpContext.Session.Get("OriginalData");
@@ -164,7 +163,7 @@ public class SignatureController : Controller
         var fileName = Path.GetFileNameWithoutExtension(verifiedFileName.Replace(".p7s", ""));
         return File(originalData, "application/octet-stream", fileName);
     }
-     
+
     public async Task<IActionResult> Certificates()
     {
         var certificates = await _signatureService.GetInstalledCertificatesAsync();

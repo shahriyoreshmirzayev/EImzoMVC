@@ -1,0 +1,64 @@
+﻿@using EImzoMVC.Models
+@{
+    ViewData["Title"] = "Imzolash Natijasi";
+    var signerInfo = ViewBag.SignerInfo as SignerInfo;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Muvaffaqiyat xabari -->
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <h4 class="alert-heading">
+                    <i class="bi bi-check-circle-fill"></i> Muvaffaqiyatli!
+                </h4>
+                <p class="mb-0">@ViewBag.Message</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Imzo ma'lumotlari -->
+            @if (signerInfo != null)
+            {
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4><i class="bi bi-person-badge"></i> Imzo Ma'lumotlari</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Egasi (Common Name):</label>
+                                <input type="text" class="form-control"
+                                       value="@signerInfo.ValidTo.ToString("dd.MM.yyyy HH:mm")" readonly />
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Seriya raqami:</label>
+                                <input type="text" class="form-control" value="@signerInfo.SerialNumber" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Amallar -->
+            <div class="card shadow">
+                <div class="card-body text-center p-4">
+                    <h5 class="mb-4">Keyingi Amallar</h5>
+                    <div class="d-grid gap-2">
+                        <a asp-action="DownloadSigned" class="btn btn-primary btn-lg">
+                            <i class="bi bi-download"></i> Imzolangan Faylni Yuklash (.p7s)
+                        </a>
+                        <a asp-action="Sign" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Yana Hujjat Imzolash
+                        </a>
+                        <a asp-action="Verify" class="btn btn-outline-info">
+                            <i class="bi bi-check-circle"></i> Imzoni Tekshirish
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-house"></i> Bosh Sahifaga
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,117 @@
+﻿@model EImzoMVC.Models.VerificationResult
+@{
+    ViewData["Title"] = "Tekshirish Natijasi";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            @if (Model.IsValid)
+            {
+                <!-- Muvaffaqiyat -->
+                <div class="alert alert-success border-success" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="bi bi-check-circle-fill"></i> Imzo To'g'ri va Haqiqiy!
+                    </h4>
+                    <p class="mb-0">@Model.Message</p>
+                </div>
+
+                <!-- Imzolovchi ma'lumotlari -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h4><i class="bi bi-person-check"></i> Imzolovchi Ma'lumotlari</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Egasi:</label>
+                                <input type="text" class="form-control"
+                                       value="@Model.SignerInfo.CommonName" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tashkilot:</label>
+                                <input type="text" class="form-control"
+                                       value="@Model.SignerInfo.Organization" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Mamlakat:</label>
+                                <input type="text" class="form-control"
+                                       value="@Model.SignerInfo.Country" readonly />
+                            </div>
+                            @if (Model.SigningTime.HasValue)
+                            {
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-clock"></i> Imzolangan vaqt:
+                                    </label>
+                                    <input type="text" class="form-control"
+                                           value="@Model.SigningTime.Value.ToString("dd.MM.yyyy HH:mm:ss")" readonly />
+                                </div>
+                            }
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Sertifikat amal qilish:</label>
+                                <input type="text" class="form-control"
+                                       value="@Model.SignerInfo.ValidFrom.ToString("dd.MM.yyyy")" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Sertifikat tugashi:</label>
+                                <input type="text" class="form-control"
+                                       value="@Model.SignerInfo.ValidTo.ToString("dd.MM.yyyy")" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amallar -->
+                <div class="card shadow">
+                    <div class="card-body text-center p-4">
+                        <div class="d-grid gap-2">
+                            <a asp-action="DownloadOriginal" class="btn btn-success btn-lg">
+                                <i class="bi bi-download"></i> Asl Hujjatni Yuklash
+                            </a>
+                            <a asp-action="Verify" class="btn btn-primary">
+                                <i class="bi bi-arrow-repeat"></i> Boshqa Faylni Tekshirish
+                            </a>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-house"></i> Bosh Sahifaga
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Xatolik -->
+                <div class="alert alert-danger border-danger" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="bi bi-x-circle-fill"></i> Imzo Noto'g'ri!
+                    </h4>
+                    <p>@Model.Message</p>
+                    <hr>
+                    <p class="mb-0">
+                        <strong>Sabablari:</strong>
+                    </p>
+                    <ul class="mt-2">
+                        <li>Hujjat imzolangandan keyin o'zgartirilgan</li>
+                        <li>Imzo buzilgan yoki noto'g'ri</li>
+                        <li>Sertifikat muddati tugagan</li>
+                        <li>Fayl formati noto'g'ri</li>
+                    </ul>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-body text-center p-4">
+                        <div class="d-grid gap-2">
+                            <a asp-action="Verify" class="btn btn-primary">
+                                <i class="bi bi-arrow-repeat"></i> Qayta Urinish
+                            </a>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-house"></i> Bosh Sahifaga
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

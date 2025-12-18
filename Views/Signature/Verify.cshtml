@@ -1,0 +1,67 @@
+﻿@model EImzoMVC.Models.VerifySignatureViewModel
+@{
+    ViewData["Title"] = "Imzoni Tekshirish";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3><i class="bi bi-check-circle-fill"></i> Imzoni Tekshirish</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Verify" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Imzolangan fayl -->
+                        <div class="mb-4">
+                            <label asp-for="SignedFile" class="form-label">
+                                <i class="bi bi-file-earmark-lock"></i> Imzolangan fayl
+                            </label>
+                            <input asp-for="SignedFile" class="form-control form-control-lg"
+                                   type="file" accept=".p7s" />
+                            <span asp-validation-for="SignedFile" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i>
+                                .p7s formatidagi imzolangan faylni tanlang
+                            </div>
+                        </div>
+
+                        <!-- Tugmalar -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle-fill"></i> Imzoni Tekshirish
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Orqaga
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tekshirish haqida -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="bi bi-info-circle"></i> Tekshirish Jarayoni</h5>
+                </div>
+                <div class="card-body">
+                    <p>Imzoni tekshirish quyidagi qadamlardan iborat:</p>
+                    <ol>
+                        <li class="mb-2">Imzolangan fayl strukturasi tahlil qilinadi</li>
+                        <li class="mb-2">Sertifikat amal qilish muddati tekshiriladi</li>
+                        <li class="mb-2">Hujjat hash qiymati hisoblanadi</li>
+                        <li class="mb-2">Imzo ochiq kalit yordamida dekodlanadi</li>
+                        <li class="mb-2">Hash qiymatlar solishtiriladi</li>
+                        <li>Natija aniqlanadi: to'g'ri yoki noto'g'ri</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

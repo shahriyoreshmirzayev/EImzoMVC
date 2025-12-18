@@ -1,0 +1,98 @@
+﻿@{
+    ViewData["Title"] = "E-IMZO Tizimi";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="text-center mb-5">
+                <h1 class="display-4">
+                    <i class="bi bi-shield-check text-primary"></i>
+                    Elektron Raqamli Imzo Tizimi
+                </h1>
+                <p class="lead text-muted">
+                    O'zbekiston Respublikasining Elektron Raqamli Imzo standartlari asosida
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <!-- Imzolash -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-shadow">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="bi bi-pen text-success" style="font-size: 4rem;"></i>
+                            </div>
+                            <h3 class="card-title">Hujjatni Imzolash</h3>
+                            <p class="card-text text-muted mb-4">
+                                Hujjatingizni elektron raqamli imzo bilan imzolang
+                            </p>
+                            <a asp-action="Sign" class="btn btn-success btn-lg">
+                                <i class="bi bi-pen-fill"></i> Imzolashga o'tish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tekshirish -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-shadow">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="bi bi-check-circle text-primary" style="font-size: 4rem;"></i>
+                            </div>
+                            <h3 class="card-title">Imzoni Tekshirish</h3>
+                            <p class="card-text text-muted mb-4">
+                                Imzolangan hujjatning haqiqiyligini tekshiring
+                            </p>
+                            <a asp-action="Verify" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle-fill"></i> Tekshirishga o'tish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sertifikatlar -->
+                <div class="col-md-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-key text-warning" style="font-size: 3rem;"></i>
+                            <h4 class="card-title mt-3">O'rnatilgan Sertifikatlar</h4>
+                            <p class="card-text text-muted">
+                                Tizimingizda o'rnatilgan raqamli sertifikatlarni ko'ring
+                            </p>
+                            <a asp-action="Certificates" class="btn btn-warning">
+                                <i class="bi bi-key-fill"></i> Sertifikatlarni ko'rish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ma'lumot -->
+            <div class="card mt-5 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="bi bi-info-circle"></i> Muhim Ma'lumot</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Imzolash uchun amal qilish muddati o'tmagan sertifikat kerak</li>
+                        <li>Qo'llab-quvvatlanadigan formatlar: PFX, P12</li>
+                        <li>Maksimal fayl hajmi: 10 MB</li>
+                        <li>Imzolangan fayllar .p7s formatida saqlanadi</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow {
+        transition: all 0.3s ease;
+    }
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    }
+</style>

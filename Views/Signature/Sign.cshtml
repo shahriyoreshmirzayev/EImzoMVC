@@ -1,0 +1,89 @@
+﻿@model EImzoMVC.Models.SignDocumentViewModel
+@{
+    ViewData["Title"] = "Hujjatni Imzolash";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3><i class="bi bi-pen-fill"></i> Hujjatni Imzolash</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Sign" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Hujjat fayli -->
+                        <div class="mb-4">
+                            <label asp-for="DocumentFile" class="form-label">
+                                <i class="bi bi-file-earmark"></i> Imzolanishi kerak bo'lgan hujjat
+                            </label>
+                            <input asp-for="DocumentFile" class="form-control form-control-lg" type="file" />
+                            <span asp-validation-for="DocumentFile" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i>
+                                Barcha formatdagi fayllar qo'llab-quvvatlanadi (PDF, DOCX, TXT, va boshqalar)
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Sertifikat fayli -->
+                        <div class="mb-4">
+                            <label asp-for="CertificateFile" class="form-label">
+                                <i class="bi bi-shield-lock"></i> Elektron raqamli imzo sertifikati
+                            </label>
+                            <input asp-for="CertificateFile" class="form-control form-control-lg"
+                                   type="file" accept=".pfx,.p12" />
+                            <span asp-validation-for="CertificateFile" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i>
+                                Faqat PFX yoki P12 formatidagi sertifikatlar
+                            </div>
+                        </div>
+
+                        <!-- Parol -->
+                        <div class="mb-4">
+                            <label asp-for="Password" class="form-label">
+                                <i class="bi bi-key"></i> Sertifikat paroli
+                            </label>
+                            <input asp-for="Password" class="form-control form-control-lg" type="password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <!-- Tugmalar -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-pen-fill"></i> Hujjatni Imzolash
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Orqaga
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Qo'llanma -->
+            <div class="card mt-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="bi bi-question-circle"></i> Qo'llanma</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li class="mb-2">Imzolanishi kerak bo'lgan hujjat faylini tanlang</li>
+                        <li class="mb-2">O'zingizning elektron raqamli imzo sertifikatingizni (PFX/P12) tanlang</li>
+                        <li class="mb-2">Sertifikat parolini kiriting</li>
+                        <li class="mb-2">"Hujjatni Imzolash" tugmasini bosing</li>
+                        <li>Imzolangan faylni yuklab oling (.p7s format)</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

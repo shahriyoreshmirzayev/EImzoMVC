@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
 
 namespace EImzoMVC;
 
@@ -63,6 +64,69 @@ public class SignatureController : Controller
             _logger.LogError(ex, "Remote challenge creation failed");
             ModelState.AddModelError("", "Challenge yaratishda xatolik");
             return View("Sign", model);
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ESignIn([FromForm] Models.ESignInModel model)
+    {
+        // Sign out existing session
+        await HttpContext.SignOutAsync();
+
+        if (_eImzoService == null)
+            return BadRequest(new { success = false, message = "E-Imzo service not configured" });
+
+        try
+        {
+            // Timestamp (using PKCS#7 timestamp endpoint on remote)
+            var tsDto = new Models.EImzoTimeStampDto { SignData = model.Sign };
+            var timeStamp = await _eImzoService.TimeStamp(tsDto.SignData);
+
+            // If idcard, populate Inn/Pinfl from timestamp
+            if (model.KeyId?.ToLower() == "idcard")
+            {
+                model.Inn = timeStamp.TimestampedSignerList.FirstOrDefault()?.SubjectName.Inn;
+                model.Pinfl = timeStamp.TimestampedSignerList.FirstOrDefault()?.SubjectName.Pinfl;
+            }
+
+            // Verify attached PKCS#7 on remote
+            var verify = await _eImzoService.VerifyAttached(new Models.EImzoVerifyDto { SignData = timeStamp.Pkcs7b64 });
+
+            // Parse original document from verify response
+            var documentBase64 = verify.Pkcs7Info.DocumentBase64;
+            var documentBytes = Convert.FromBase64String(documentBase64);
+            var documentJson = System.Text.Encoding.UTF8.GetString(documentBytes);
+
+            Models.ESignInResponseModel signedContent;
+            try
+            {
+                var jo = Newtonsoft.Json.Linq.JObject.Parse(documentJson);
+                var uzasbo = jo["uzasbo"] as Newtonsoft.Json.Linq.JObject;
+                if (uzasbo != null)
+                    signedContent = uzasbo.ToObject<Models.ESignInResponseModel>();
+                else
+                    signedContent = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.ESignInResponseModel>(documentJson);
+            }
+            catch
+            {
+                return BadRequest(new { success = false, message = "Invalid signed document format" });
+            }
+
+            // Validate request exists - placeholder repository logic
+            // var eSignInRequest = _userESignInRequestRepository.ByUniqueKey(signedContent.RequestId);
+            // if (eSignInRequest == null || eSignInRequest.CreatedAt.AddMinutes(10) < DateTime.Now) { ... }
+
+            // Determine user by Pinfl/Inn - placeholder, adapt to your repositories
+            // User user = FindUserBySignedContent(signedContent, verify);
+
+            // For demo return parsed content and verify info
+            return Json(new { success = true, signed = signedContent, verify = verify });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ESignIn failed");
+            return StatusCode(500, new { success = false, message = "Internal error" });
         }
     }
 

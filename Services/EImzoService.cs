@@ -43,11 +43,23 @@ public class EImzoService
         return JsonConvert.DeserializeObject<EImzoTimeStampResultDto>(content)!;
     }
 
+    // Backwards compatible wrapper used by controller
+    public async Task<EImzoTimeStampResultDto> TimeStamp(string base64Pkcs7)
+    {
+        return await TimeStampPkcs7Async(base64Pkcs7);
+    }
+
     public async Task<EImzoVerifyResultDto> VerifyAttachedAsync(string signData)
     {
         using var res = await _httpClient.PostAsync($"{_config.ServerUri}/backend/pkcs7/verify/attached", new StringContent(signData));
         var content = await res.Content.ReadAsStringAsync();
         if (!res.IsSuccessStatusCode) throw new HttpRequestException(content);
         return JsonConvert.DeserializeObject<EImzoVerifyResultDto>(content)!;
+    }
+
+    // Backwards compatible wrapper
+    public async Task<EImzoVerifyResultDto> VerifyAttached(EImzoVerifyDto dto)
+    {
+        return await VerifyAttachedAsync(dto.SignData);
     }
 }

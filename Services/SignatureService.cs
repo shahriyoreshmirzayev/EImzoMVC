@@ -97,14 +97,48 @@ public class SignatureService : ISignatureService
             }
              
             var contentInfo = new ContentInfo(documentData);
-             
+
             var signedCms = new SignedCms(contentInfo, detached: false);
-             
+
             var cmsSigner = new CmsSigner(certificate)
             {
                 IncludeOption = X509IncludeOption.WholeChain,
-                DigestAlgorithm = new Oid("2.16.840.1.101.3.4.2.1")  
+                DigestAlgorithm = new Oid("2.16.840.1.101.3.4.2.1")
             };
+
+            // Try to attach the concrete private key (RSA or ECDsa). If key algorithm is unsupported (e.g. GOST), provide a clear error.
+            var rsaKey = certificate.GetRSAPrivateKey();
+            var ecdsaKey = certificate.GetECDsaPrivateKey();
+            AsymmetricAlgorithm privateKey = (AsymmetricAlgorithm?)rsaKey ?? (AsymmetricAlgorithm?)ecdsaKey;
+
+            if (privateKey != null)
+            {
+                cmsSigner.PrivateKey = privateKey;
+            }
+            else
+            {
+                // Determine algorithm OID/name to give a helpful message
+                var algOid = certificate.PublicKey?.Oid?.Value ?? certificate.SignatureAlgorithm?.Value ?? "";
+                var algName = certificate.PublicKey?.Oid?.FriendlyName ?? certificate.SignatureAlgorithm?.FriendlyName ?? "";
+
+                _logger.LogWarning("No supported private key found for certificate. OID={Oid} Name={Name}", algOid, algName);
+
+                // Common GOST OIDs start with 1.2.643 - if detected, indicate unsupported algorithm
+                if (!string.IsNullOrEmpty(algOid) && algOid.StartsWith("1.2.643"))
+                {
+                    return new SignatureResult
+                    {
+                        Success = false,
+                        Message = "Sertifikat GOST algoritmida yoki HSM/tokenda saqlangan, serverda imzolash qo'llab-quvvatlanmaydi. Iltimos, tashqi E-Imzo ilovasi orqali imzo yuboring."
+                    };
+                }
+
+                return new SignatureResult
+                {
+                    Success = false,
+                    Message = "Sertifikat private keyi topilmadi yoki qo'llab-quvvatlanmaydigan algoritm. Tashqi ilova orqali imzolashni ishlating."
+                };
+            }
              
             var signingTime = new Pkcs9SigningTime(DateTime.Now);
             cmsSigner.SignedAttributes.Add(new AsnEncodedData(signingTime.Oid, signingTime.RawData));

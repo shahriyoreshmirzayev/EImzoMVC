@@ -19,9 +19,7 @@ public class SignatureService : ISignatureService
         try
         {
             _logger.LogInformation("Hujjatni imzolash boshlandi...");
-             
-            // Try to load a certificate from the provided PKCS#12 (PFX/P12) data.
-            // Some PKCS#12 blobs contain multiple certs; prefer one that has a private key.
+              
             X509Certificate2 certificate = null;
             var attempts = new[] {
                 X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.UserKeySet,
@@ -47,16 +45,14 @@ public class SignatureService : ISignatureService
                     if (certificate.HasPrivateKey) break;
                 }
                 catch (Exception ex)
-                {
-                    // remember last exception and try next flags
+                { 
                     lastEx = ex;
                     _logger.LogDebug(ex, "PKCS#12 import attempt failed with flags {Flags}", flags);
                 }
             }
 
             if (certificate == null)
-            {
-                // If we failed to import, prefer to show a helpful message when password is incorrect
+            { 
                 if (lastEx is CryptographicException && lastEx.Message.Contains("The specified network password is not correct", StringComparison.OrdinalIgnoreCase))
                 {
                     return new SignatureResult
@@ -112,8 +108,7 @@ public class SignatureService : ISignatureService
              
             var signingTime = new Pkcs9SigningTime(DateTime.Now);
             cmsSigner.SignedAttributes.Add(new AsnEncodedData(signingTime.Oid, signingTime.RawData));
-
-            // Imzolash
+             
             signedCms.ComputeSignature(cmsSigner);
 
             var signedData = signedCms.Encode();
